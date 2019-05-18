@@ -12,6 +12,7 @@ class Particle:
         self.network = network
         edges = self.network.find_edges()
         random.shuffle(edges)
+        random.shuffle(edges)
         t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
         t.kruskal(edges,self.network.N)
         
@@ -146,28 +147,31 @@ class Swarm:
 
     def eval(self):
         i,k = 0,0
-        fv = sys.maxsize
         
         start = time.time()
+        fv = sys.maxsize
+
         while i < self.max_iter and k < 20:
             evals = []
             for j in range(self.swarm_size):
                 target = self.calculate_target(self.swarm[j])
                 self.update_target(target)
                 evals.append(self.fitness_evaluation(target))
-            
+           
             _fv = min(evals)
-            # check if solution is optimum
-            if abs(_fv - fv) < self.delta:
+            fv_tmp = fv
+            
+            if _fv < fv:
+                fv = _fv
+
+            # check if solution is converged into optimum
+            if abs(fv - fv_tmp) < self.delta:
                 k += 1
             else:
                 k = 0
 
-            if _fv < fv:
-                fv = float(_fv)
-
-            F = sum(evals)
-            p = [x/F for x in evals]
+            F = sum([1/x for x in evals])
+            p = [(1/x)/F for x in evals]
             q = [sum(p[:x+1]) for x in range(self.swarm_size)]
             
             _swarm = list(self.swarm)

@@ -258,10 +258,7 @@ class Swarm:
             
             # update global
             _g_err = min(self.fitness)
-            if abs(_g_err - self.g_err) < self.min_err:
-                k += 1
-            else:
-                k = 0
+            g_err_tmp = float(self.g_err)
             
             if _g_err < self.g_err:
                 idx = self.fitness.index(_g_err)
@@ -269,6 +266,11 @@ class Swarm:
                 self.g_layer_1 = list(self.swarm[idx].p_layer_1)
                 self.g_layer_2 = list(self.swarm[idx].p_layer_2)
 
+            if abs(self.g_err - g_err_tmp) < self.min_err:
+                k += 1
+            else:
+                k = 0
+            
             i += 1
         
         end = time.time()
