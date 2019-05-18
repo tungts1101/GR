@@ -3,7 +3,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'../../WusnNewModel'))
 
 import random
 from steinertree import Tree
-import matplotlib.pyplot as plt
 from common.input import WusnConstants as cf
 from common.input import WusnInput as inp
 
@@ -87,23 +86,23 @@ class Network:
 
         return edges
         
-    def draw_vertices(self,vertices,shape):
-        plt.plot([self.coord[i][0] for i in vertices],[self.coord[i][1] for i in vertices],shape)
+    # def draw_vertices(self,vertices,shape):
+        # plt.plot([self.coord[i][0] for i in vertices],[self.coord[i][1] for i in vertices],shape)
 
-    def draw_edge(self,v1,v2):
-        x1,y1 = self.coord[v1]
-        x2,y2 = self.coord[v2]
-        plt.plot([x1,x2],[y1,y2],'-r')
+    # def draw_edge(self,v1,v2):
+        # x1,y1 = self.coord[v1]
+        # x2,y2 = self.coord[v2]
+        # plt.plot([x1,x2],[y1,y2],'-r')
 
-    def show(self,tree):
-        # draw vertices
-        self.draw_vertices(self.sources,'gs')
-        self.draw_vertices([self.sink],'b^')
-        self.draw_vertices(self.relays,'ro')
+    # def show(self,tree):
+        # # draw vertices
+        # self.draw_vertices(self.sources,'gs')
+        # self.draw_vertices([self.sink],'b^')
+        # self.draw_vertices(self.relays,'ro')
 
-        # draw edges
-        for v1,v2 in tree.find_fringe():
-            self.draw_edge(v1,v2)
+        # # draw edges
+        # for v1,v2 in tree.find_fringe():
+            # self.draw_edge(v1,v2)
 
-        plt.axis([0,self.area[0],0,self.area[1]])
-        plt.show()
+        # plt.axis([0,self.area[0],0,self.area[1]])
+        # plt.show()
