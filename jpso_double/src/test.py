@@ -35,8 +35,8 @@ def draw():
         v1_s,t1_s = cal(small,Swarm_v1)
         v2_s,t2_s = cal(small,Swarm_v2)
 
-        v1_m,t1_m = cal(medium,Swarm_v1)
-        v2_m,t2_m = cal(medium,Swarm_v2)
+        #v1_m,t1_m = cal(medium,Swarm_v1)
+        #v2_m,t2_m = cal(medium,Swarm_v2)
     except Exception as ex:
         print(ex)
         exit(1)
@@ -55,9 +55,9 @@ def draw():
     
     print('|{:30}|{:61}|'.format(''.join(['_' for _ in range(30)]),''.join(['_' for _ in range(61)])))
     
-    print('|{:30}|{:^15.2f}|{:^14.2f}|{:^15.2f}|{:^14.2f}|'.format('Source & relay nodes = 100',v1_m,t1_m,v2_m,t2_m))
+    #print('|{:30}|{:^15.2f}|{:^14.2f}|{:^15.2f}|{:^14.2f}|'.format('Source & relay nodes = 100',v1_m,t1_m,v2_m,t2_m))
 
-    print('|{:30}|{:61}|'.format(''.join(['_' for _ in range(30)]),''.join(['_' for _ in range(61)])))
+    #print('|{:30}|{:61}|'.format(''.join(['_' for _ in range(30)]),''.join(['_' for _ in range(61)])))
 
     exit(0)
 
