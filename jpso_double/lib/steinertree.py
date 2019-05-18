@@ -56,11 +56,12 @@ class Tree:
             if xroot != yroot:
                 fringe.append((x,y))
                 self.__union(parent,rank,xroot,yroot)
-                if can_stop():
-                    break
-
+                #if can_stop():
+                #    break
+        
+        #print(list(set(node for edge in fringe for node in edge)))
         self.__construct_tree(fringe)
-            
+        
     #####
     # construct a fisible tree from list of fringes
     # input:
@@ -203,13 +204,16 @@ class Tree:
     # check if tree is a fisible solution
     def is_fisible(self,cal_dis,trans_range):
         if not self.__is_fisible():
+            #print('leaf not good')
             return False
         
         if not self.__is_sublist(self.compulsory_nodes,self.find_nodes()):
+            #print('not contain all nodes')
             return False
 
         for x,y in self.find_fringe():
             if cal_dis(x,y) > trans_range:
+                #print('edge not fisible')
                 return False
 
         return True
