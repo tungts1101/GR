@@ -168,7 +168,7 @@ class Particle:
         return layer
 
 class Swarm:
-    def __init__(self,network,swarm_size=20,max_iter=200,max_consecutive=20,c0=0.25,c1=0.25,min_err=0.01):
+    def __init__(self,network,swarm_size=20,max_iter=150,max_consecutive=20,c0=0.25,c1=0.25,min_err=0.01):
         self.network = network
         # init some constant variables
         self.swarm_size = swarm_size
@@ -253,7 +253,8 @@ class Swarm:
         start = time.time()
         
         while i < self.max_iter and k < self.max_consecutive:
-            pred_fv = sum(self.fitness)/len(self.fitness)
+            #pred_fv = sum(self.fitness)/len(self.fitness)
+            pred_fv = float(self.g_err)
 
             for j in range(self.swarm_size):
                 r = random.uniform(0,1)
@@ -267,7 +268,8 @@ class Swarm:
             
             self.__update_global() 
 
-            cur_fv = sum(self.fitness)/len(self.fitness)
+            #cur_fv = sum(self.fitness)/len(self.fitness)
+            cur_fv = float(self.g_err)
 
             if abs(cur_fv - pred_fv) < self.min_err:
                 k += 1
