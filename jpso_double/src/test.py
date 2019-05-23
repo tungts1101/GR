@@ -6,6 +6,7 @@ from jpso_double import Swarm as Swarm_v1
 from jpso_double_v2 import Swarm as Swarm_v2
 from steinertree import Tree
 import random
+from multiprocessing import Process,Value
 
 fp = os.path.join(os.path.dirname(__file__),'../../WusnNewModel/data')
 
@@ -19,16 +20,28 @@ def get_file(d):
 small = get_file(fp+'/small_data/')
 medium = get_file(fp+'/medium_data/')
 
-def cal(fl,swarm):
-    v,t,i = 0,0,0
-    for f in fl:
-        i += 1
-        nw = Network(f)
-        s = swarm(nw)
-        r = s.eval()
-        v += r['value']; t += r['time']
+def handle_file(f,swarm,v,t):
+    nw = Network(f)
+    s = swarm(nw)
+    r = s.eval()
 
-    return (v/i,t/i)
+    v.value += r['value']
+    t.value += r['time']
+
+def cal(fl,swarm): 
+    v = Value('d',0.0)
+    t = Value('d',0.0)
+    
+    all_processes = [Process(target=handle_file,args=(f,swarm,v,t)) for f in fl]
+
+    for p in all_processes:
+        p.start()
+
+    for p in all_processes:
+        p.join()
+    
+    l = len(fl)
+    return (v.value/l,t.value/l)
 
 def draw():
     try:
