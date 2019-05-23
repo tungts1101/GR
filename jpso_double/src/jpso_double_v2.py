@@ -10,19 +10,21 @@ import time
 class Particle:
     def __init__(self,network):
         self.network = network
+        self.solution = None
+
+    def construct(self):
         edges = self.network.find_edges()
         random.shuffle(edges)
         random.shuffle(edges)
         t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
         t.kruskal(edges,self.network.N)
-        
         self.solution = t
 
     def __repr__(self):
         return "{}\n".format(self.solution.tree)
 
 class Swarm:
-    def __init__(self,network,swarm_size=20,max_iter=200,Pc=0.25,Pm=0.01,delta=0.01):
+    def __init__(self,network,swarm_size=20,max_iter=200,Pc=0.8,Pm=0.05,delta=0.01):
         self.network = network
         # init some constant variables
         self.swarm_size = swarm_size
@@ -39,19 +41,39 @@ class Swarm:
         self.target = []
         self.zmax = [1e-9] * 4
         self.zmin = [1e9] * 4
+        
+        self.fitness = []
+        self.g_err = None
 
         for _ in range(swarm_size):
             p = Particle(self.network)
+            p.construct()
             self.swarm.append(p)
-            target = self.calculate_target(p)
-            self.target.append(target)
-            self.update_target(target)
-        
-        # print("Zmax = {0}\nZmin = {1}".format(self.zmax,self.zmin))
+
+        self.__update_global()
 
     def __repr__(self):
         # return "Best solution = {}".format(min(self.fitness))
         return ""
+    
+    def __update_global(self):
+        self.target = []
+        self.zmax = [1e-9] * 4
+        self.zmin = [1e9] * 4
+    
+        for particle in self.swarm:
+            target = self.calculate_target(particle)
+            self.target.append(target)
+            self.update_target(target)
+        
+        self.fitness = []
+        for target in self.target:
+            fv = self.fitness_evaluation(target)
+            self.fitness.append(self.fitness_evaluation(target))
+        
+        idx = self.fitness.index(min(self.fitness))
+        self.solution = self.swarm[idx].solution
+        self.g_err = float(self.fitness[idx])
 
     def calculate_target(self,p):
         return (
@@ -69,7 +91,7 @@ class Swarm:
     def is_dominated(self,solution):
         flag = False
         for another_solution in self.target:
-            if another_solution is not solution:
+            if another_solution != solution:
                 flag = reduce((lambda x,y:x&y),[x<y for (x,y) in zip(another_solution,solution)])
                 if flag:
                     return flag
@@ -77,7 +99,7 @@ class Swarm:
         return flag
 
     def fitness_evaluation(self,target):
-        weighted_sum = sum([(target[j] - self.zmin[j])/(self.zmax[j]-self.zmin[j] + 1e-6) for j in range(4)])
+        weighted_sum = sum([(target[j] - self.zmin[j] + 1e-6)/(self.zmax[j] - self.zmin[j] + 1e-6) for j in range(4)])
         pareto = 1 if self.is_dominated(target) else 0
         return weighted_sum + pareto
     
@@ -88,7 +110,11 @@ class Swarm:
             if q[i-1] < r and r <= q[i]:
                 return i
 
-    def __cross(self,t1,t2):
+    def __cross(self,p1,p2):
+        p = Particle(self.network)
+
+        t1 = p1.solution
+        t2 = p2.solution
         t1_fringe = t1.find_fringe()
         t2_fringe = t2.find_fringe()
 
@@ -100,7 +126,8 @@ class Swarm:
         t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
         t.kruskal(intersections + unions,self.network.N)
 
-        return t
+        p.solution = t
+        return p
 
     def __mutate_helper(self,tree,fringe):
         def adj(tree,node):
@@ -134,62 +161,69 @@ class Swarm:
         t.kruskal(fringes,self.network.N)
         return t
 
-    def __mutate(self,t):
+    def __mutate(self,particle):
+        p = Particle(particle.network)
+        t = particle.solution
         i = 0
         x,y = random.sample(t.find_nodes(),2)
-        while self.network.distance(x,y) > self.network.trans_range and i < 10:
+        while self.network.distance(x,y) > self.network.trans_range:
             x,y = random.sample(t.find_nodes(),2)
-            i += 1
         
-        _t = self.__mutate_helper(t,(x,y))
-        if _t.is_fisible(self.network.distance,self.network.trans_range):
-            t = _t
+        p.solution = self.__mutate_helper(t,(x,y))
+        return p
 
     def eval(self):
         i,k = 0,0
         
         start = time.time()
-        fv = sys.maxsize
 
         while i < self.max_iter and k < 20:
-            evals = []
-            for j in range(self.swarm_size):
-                target = self.calculate_target(self.swarm[j])
-                self.update_target(target)
-                evals.append(self.fitness_evaluation(target))
-           
-            _fv = min(evals)
-            fv_tmp = fv
-            
-            if _fv < fv:
-                fv = _fv
+            pred_fv = sum(self.fitness)/len(self.fitness)
 
-            # check if solution is converged into optimum
-            if abs(fv - fv_tmp) < self.delta:
+            P = list(self.swarm)
+            
+            # muration
+            Q1 = [self.__mutate(P[i]) for i in range(len(P)) if random.uniform(0,1) < self.Pm]
+
+            # crossover
+            c = [i for i in range(len(P)) if random.uniform(0,1) < self.Pc]
+            random.shuffle(c)
+            c = c[:len(c) - len(c)%2]
+            Q2 = [self.__cross(P[i],P[j]) for (i,j) in zip (c[:len(c)//2],c[len(c)//2:])]
+
+            # selection
+            swarm = P + Q1 + Q2
+
+            evals = []
+            for particle in swarm:
+                target = self.calculate_target(particle)
+                self.update_target(target)
+                #evals.append(self.fitness_evaluation(target))
+            
+            # F = sum([1/(x+self.delta) for x in evals])
+            # p = [(1/(x+self.delta))/F for x in evals]
+            # q = [sum(p[:x+1]) for x in range(len(swarm))]
+            
+            self.swarm = sorted(swarm,key=lambda particle:self.fitness_evaluation(self.calculate_target(particle)))[:20]
+
+            #self.swarm = [swarm[self.__select(q,random.uniform(0,1))] for _ in range(len(swarm))][:20]
+           
+            self.__update_global()
+
+            cur_fv = sum(self.fitness)/len(self.fitness)
+
+            if abs(cur_fv - pred_fv) < self.delta:
                 k += 1
             else:
                 k = 0
 
-            F = sum([1/x for x in evals])
-            p = [(1/x)/F for x in evals]
-            q = [sum(p[:x+1]) for x in range(self.swarm_size)]
-            
-            _swarm = list(self.swarm)
-            #print("Swarm before = {}\n".format(self.swarm))
-            self.swarm = [_swarm[self.__select(q,random.uniform(0,1))] for _ in range(self.swarm_size)]
-            #print ("Swarm after = {}".format(self.swarm))
-
-            # crossover
-            c = [i for i in range(self.swarm_size) if random.uniform(0,1) < self.Pc]
-            random.shuffle(c)
-            c = c[:len(c) - len(c)%2]
-            [self.__cross(self.swarm[i].solution,self.swarm[j].solution) for (i,j) in zip (c[:len(c)//2],c[len(c)//2:])]
-
-            # muration
-            [self.__mutate(self.swarm[i].solution) for i in range(self.swarm_size) if random.uniform(0,1) < self.Pm]
-            
             i += 1
-        
-        end = time.time()
 
-        return ({'time': end-start, 'gens': i, 'value':fv})
+        end = time.time()
+        
+        result = {
+            'time': end - start,
+            'gen': i,
+            'value': self.g_err
+        }
+        return result 

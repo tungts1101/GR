@@ -180,24 +180,19 @@ class Swarm:
 
         self.swarm = []
 
-        # list of tuple
-        # (energy_consumption,self.network_lifetime,convergence_time,communication_interference)
-        # for each particle
-        self.target = []
-        self.zmax = [1e-9] * 4
-        self.zmin = [1e9] * 4
-
         for _ in range(swarm_size):
             p = Particle(self.network)
             self.swarm.append(p)
-            self.update_target(self.calculate_target(p))
         
-        # print("Zmax = {0}\nZmin = {1}".format(self.zmax,self.zmin))
-
-        self.fitness = [1e9] * swarm_size
+        self.target = []
+        self.zmax = [1e-9] * 4
+        self.zmin = [1e9] * 4
+        self.fitness = []
         self.g_layer_1 = []
         self.g_layer_2 = []
-        self.g_err = sys.maxsize
+        self.g_err = None
+
+        self.__update_global()
 
     def __repr__(self):
         return "Layer 1: {0}\nLayer 2: {1}\nFitness value: {2}".format(self.g_layer_1,self.g_layer_2,self.g_err)
@@ -220,15 +215,35 @@ class Swarm:
     def is_dominated(self,solution):
         flag = False
         for another_solution in self.target:
-            if another_solution is not solution:
+            if another_solution != solution:
                 flag = reduce((lambda x,y:x&y),[x<y for (x,y) in zip(another_solution,solution)])
                 if flag:
                     return flag
 
         return flag                
+    
+    def __update_global(self):
+        self.target = []
+        self.zmax = [1e-9] * 4
+        self.zmin = [1e9] * 4
+        
+        for particle in self.swarm:
+            target = self.calculate_target(particle)
+            self.target.append(target)
+            self.update_target(target)
+
+        self.fitness = []
+
+        for target in self.target:
+            self.fitness.append(self.fitness_evaluation(target))
+
+        idx = self.fitness.index(min(self.fitness))
+        self.g_layer_1 = self.swarm[idx].layer_1
+        self.g_layer_2 = self.swarm[idx].layer_2
+        self.g_err = float(self.fitness[idx])
 
     def fitness_evaluation(self,target):
-        weighted_sum = sum([(target[j] - self.zmin[j])/(self.zmax[j]-self.zmin[j] + 1e-6) for j in range(4)])
+        weighted_sum = sum([(target[j] - self.zmin[j] + 1e-6)/(self.zmax[j]-self.zmin[j] + 1e-6) for j in range(4)])
         pareto = 1 if self.is_dominated(target) else 0
         return weighted_sum + pareto
     
@@ -236,7 +251,10 @@ class Swarm:
         i=0;k=0
         
         start = time.time()
+        
         while i < self.max_iter and k < self.max_consecutive:
+            pred_fv = sum(self.fitness)/len(self.fitness)
+
             for j in range(self.swarm_size):
                 r = random.uniform(0,1)
 
@@ -246,27 +264,12 @@ class Swarm:
                 else:
                     flag = (self.swarm[j].layer_1 == self.g_layer_1)
                     self.swarm[j].update(self.g_layer_1,self.g_layer_2,flag)
-                
-                target = self.calculate_target(self.swarm[j])
-                self.update_target(target)
-                f = self.fitness_evaluation(target)
-
-                if f < self.fitness[j]:
-                    self.fitness[j] = f
-                    self.swarm[j].p_layer_1 = self.swarm[j].layer_1
-                    self.swarm[j].p_layer_2 = self.swarm[j].layer_2
             
-            # update global
-            _g_err = min(self.fitness)
-            g_err_tmp = float(self.g_err)
-            
-            if _g_err < self.g_err:
-                idx = self.fitness.index(_g_err)
-                self.g_err = float(self.fitness[idx])
-                self.g_layer_1 = list(self.swarm[idx].p_layer_1)
-                self.g_layer_2 = list(self.swarm[idx].p_layer_2)
+            self.__update_global() 
 
-            if abs(self.g_err - g_err_tmp) < self.min_err:
+            cur_fv = sum(self.fitness)/len(self.fitness)
+
+            if abs(cur_fv - pred_fv) < self.min_err:
                 k += 1
             else:
                 k = 0
@@ -275,12 +278,18 @@ class Swarm:
         
         end = time.time()
 
-        return {'time':end-start,'gens':i,'value':self.g_err}
-        
-        #t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
-        #t.decode(self.g_layer_2,self.network.distance,self.network.trans_range)
+        result = {
+            'time': end - start,
+            'gen': i,
+            'value': self.g_err
+        }
 
-        #return t
+        # t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
+        # t.decode(self.g_layer_2,self.network.distance,self.network.trans_range)
+        # if not t.is_fisible(self.network.distance,self.network.trans_range):
+            # print('Not OK')
+
+        return result
 
 # for _ in range(100):
     # s = Swarm(network)
