@@ -17,13 +17,13 @@ t = Value('d',0.0)
 
 def handle_file():
     s = Swarm_v2(nw)
-    r = s.eval('sb')
+    r = s.eval('rr')
     print("{:.2f} {:.2f}".format(r['value'],r['time']))
     
     v.value += r['value']
     t.value += r['time']
 
-print('select best')
+print('round roulette')
 all_proc = [Process(target=handle_file,args=()) for i in range(30)]
 
 for p in all_proc:
