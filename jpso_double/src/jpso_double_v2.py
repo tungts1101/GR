@@ -24,7 +24,7 @@ class Particle:
         return "{}\n".format(self.solution.tree)
 
 class Swarm:
-    def __init__(self,network,swarm_size=20,max_iter=150,Pc=0.8,Pm=0.05,delta=0.01):
+    def __init__(self,network,swarm_size=10,max_iter=20,Pc=0.8,Pm=0.05,delta=0.01):
         self.network = network
         # init some constant variables
         self.swarm_size = swarm_size
@@ -172,7 +172,7 @@ class Swarm:
         p.solution = self.__mutate_helper(t,(x,y))
         return p
 
-    def eval(self):
+    def eval(self,selection):
         i,k = 0,0
         
         start = time.time()
@@ -195,19 +195,19 @@ class Swarm:
             # selection
             swarm = P + Q1 + Q2
 
-            evals = []
+            #evals = []
             for particle in swarm:
                 target = self.calculate_target(particle)
                 self.update_target(target)
-                evals.append(self.fitness_evaluation(target))
+                #evals.append(self.fitness_evaluation(target))
             
-            F = sum([1/(x+self.delta) for x in evals])
-            p = [(1/(x+self.delta))/F for x in evals]
-            q = [sum(p[:x+1]) for x in range(len(swarm))]
+            # F = sum([1/(x+self.delta) for x in evals])
+            # p = [(1/(x+self.delta))/F for x in evals]
+            # q = [sum(p[:x+1]) for x in range(len(swarm))]
             
-            #self.swarm = sorted(swarm,key=lambda particle:self.fitness_evaluation(self.calculate_target(particle)))[:20]
+            self.swarm = sorted(swarm,key=lambda particle:self.fitness_evaluation(self.calculate_target(particle)))[:20]
 
-            self.swarm = [swarm[self.__select(q,random.uniform(0,1))] for _ in range(len(swarm))][:20]
+            #self.swarm = [swarm[self.__select(q,random.uniform(0,1))] for _ in range(len(swarm))][:20]
            
             self.__update_global()
             #cur_fv = sum(self.fitness)/len(self.fitness)
