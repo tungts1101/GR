@@ -18,6 +18,7 @@ t = Value('d',0.0)
 def handle_file():
     s = Swarm_v2(nw)
     r = s.eval()
+    print("{0:.2f} {0:.2f}".format(r['value'],r['time']))
     
     v.value += r['value']
     t.value += r['time']
@@ -30,4 +31,4 @@ for p in all_proc:
 for p in all_proc:
     p.join()
 
-print("Value = {}\nTime = {}".format(v.value/30,t.value/30))
+print("Value = {0:.2f} Time = {0:.2f}".format(v.value/30,t.value/30))
