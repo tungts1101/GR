@@ -201,6 +201,24 @@ class Tree:
 
         return nodes
     
+    # find degree of all nodes in tree
+    def find_deg(self):
+        deg = defaultdict(lambda: [])
+        i = 1
+        deg[i].append(self.root)
+        visited = 1
+
+        while visited != len(self.find_nodes()):
+            for node in deg[i]:
+                for _node in self.tree[node]:
+                    deg[i+1].append(_node)
+                    visited += 1
+
+            i += 1
+
+        return deg
+
+
     # check if tree is a fisible solution
     def is_fisible(self,cal_dis,trans_range):
         if not self.__is_fisible():

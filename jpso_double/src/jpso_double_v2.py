@@ -160,15 +160,38 @@ class Swarm:
         t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
         t.kruskal(fringes,self.network.N)
         return t
+    
+    def __select_deg(self,q):
+        r = random.random()
+        d = next(q.index(x)+1 for x in q if r<x)
+        return d
 
-    def __mutate(self,particle):
-        p = Particle(particle.network)
-        t = particle.solution
-        i = 0
-        x,y = random.sample(t.find_nodes(),2)
-        while self.network.distance(x,y) > self.network.trans_range:
-            x,y = random.sample(t.find_nodes(),2)
+    def __select_nodes(self,network,tree,gen):
+        deg = tree.find_deg()
+
+        s = sum(d**gen for d in deg.keys())
+        p = [(d**gen)/s for d in deg.keys()]
+        q = [sum(p[:x+1]) for x in range(len(p))]
+        d_1 = self.__select_deg(q)
+        node_1 = random.choice(deg[d_1])
         
+        d_2 = self.__select_deg(q)
+        node_2 = random.choice(deg[d_2])
+
+        while node_2 == node_1 or self.network.distance(node_1,node_2) > self.network.trans_range:
+            d_2 = self.__select_deg(q)
+            node_2 = random.choice(deg[d_2])
+
+        return (node_1,node_2)
+
+    def __mutate(self,particle,gen):
+        p = Particle(self.network)
+        t = particle.solution
+        # x,y = random.sample(t.find_nodes(),2)
+        # while self.network.distance(x,y) > self.network.trans_range:
+            # x,y = random.sample(t.find_nodes(),2)
+        x,y = self.__select_nodes(particle.network,t,gen)
+
         p.solution = self.__mutate_helper(t,(x,y))
         return p
     
@@ -184,7 +207,8 @@ class Swarm:
             P = list(self.swarm)
             
             # muration
-            Q1 = [self.__mutate(P[i]) for i in range(len(P)) if random.uniform(0,1) < self.Pm]
+            gen = i/self.max_iter
+            Q1 = [self.__mutate(P[i],gen) for i in range(len(P)) if random.uniform(0,1) < self.Pm]
 
             # crossover
             c = [i for i in range(len(P)) if random.uniform(0,1) < self.Pc]
