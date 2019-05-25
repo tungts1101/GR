@@ -199,18 +199,17 @@ class Swarm:
             for particle in swarm:
                 target = self.calculate_target(particle)
                 self.update_target(target)
-                #evals.append(self.fitness_evaluation(target))
+                evals.append(self.fitness_evaluation(target))
             
-            # F = sum([1/(x+self.delta) for x in evals])
-            # p = [(1/(x+self.delta))/F for x in evals]
-            # q = [sum(p[:x+1]) for x in range(len(swarm))]
+            F = sum([1/(x+self.delta) for x in evals])
+            p = [(1/(x+self.delta))/F for x in evals]
+            q = [sum(p[:x+1]) for x in range(len(swarm))]
             
-            self.swarm = sorted(swarm,key=lambda particle:self.fitness_evaluation(self.calculate_target(particle)))[:20]
+            #self.swarm = sorted(swarm,key=lambda particle:self.fitness_evaluation(self.calculate_target(particle)))[:20]
 
-            #self.swarm = [swarm[self.__select(q,random.uniform(0,1))] for _ in range(len(swarm))][:20]
+            self.swarm = [swarm[self.__select(q,random.uniform(0,1))] for _ in range(len(swarm))][:20]
            
             self.__update_global()
-
             #cur_fv = sum(self.fitness)/len(self.fitness)
             cur_fv = float(self.g_err)
 
