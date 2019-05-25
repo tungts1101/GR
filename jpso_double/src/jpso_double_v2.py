@@ -171,8 +171,8 @@ class Swarm:
         
         p.solution = self.__mutate_helper(t,(x,y))
         return p
-
-    def eval(self,selection):
+    
+    def eval(self):
         i,k = 0,0
         
         start = time.time()
