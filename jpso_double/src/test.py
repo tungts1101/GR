@@ -24,6 +24,7 @@ def handle_file(f,swarm,v,t):
     nw = Network(f)
     s = swarm(nw)
     r = s.eval()
+    print("{} {:.2f} {:.2f}".format(f,r['value'],r['time']))
 
     v.value += r['value']
     t.value += r['time']
@@ -45,7 +46,9 @@ def cal(fl,swarm):
 
 def draw():
     try:
+        print('JPSO Double')
         v1_s,t1_s = cal(small,Swarm_v1)
+        print('\nGA')
         v2_s,t2_s = cal(small,Swarm_v2)
 
         #v1_m,t1_m = cal(medium,Swarm_v1)
