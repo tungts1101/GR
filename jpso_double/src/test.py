@@ -23,8 +23,11 @@ medium = get_file(fp+'/medium_data/')
 def handle_file(f,swarm,v,t):
     nw = Network(f)
     s = swarm(nw)
-    r = s.eval()
-    print("{} {:.2f} {:.2f}".format(f,r['value'],r['time']))
+    if isinstance(s,Swarm_v2):
+        r = s.eval('rr')
+    else:
+        r = s.eval()
+    print("{} {:.2f} {:.2f}".format(f[51:],r['value'],r['time']))
 
     v.value += r['value']
     t.value += r['time']
