@@ -56,11 +56,12 @@ def draw():
         # v2_s,t2_s = cal(small,Swarm_ga)
         
         print('Medium')
-        print('JPSO Double')
-        v1_m,t1_m = cal(medium,Swarm_jpso)
-        print('value = {}, time = {}'.format(v1_m,t1_m))
+        # print('JPSO Double')
+        # v1_m,t1_m = cal(medium,Swarm_jpso)
+        # print('value = {}, time = {}'.format(v1_m,t1_m))
         print('\nGA')
-        #v2_m,t2_m = cal(medium,Swarm_ga)
+        v2_m,t2_m = cal(medium,Swarm_ga)
+        print('value = {}, time = {}'.format(v2_m,t2_m))
     except Exception as ex:
         print(ex)
         exit(1)
