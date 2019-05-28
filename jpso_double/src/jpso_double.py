@@ -265,6 +265,9 @@ class Swarm:
                 else:
                     flag = (self.swarm[j].layer_1 == self.g_layer_1)
                     self.swarm[j].update(self.g_layer_1,self.g_layer_2,flag)
+                
+                target = self.calculate_target(self.swarm[j])
+                self.update_target(target)
             
             self.__update_global() 
 
