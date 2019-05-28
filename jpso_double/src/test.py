@@ -2,8 +2,8 @@ import sys,os
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'lib'))
 
 from network_data import Network
-from jpso_double import Swarm as Swarm_v1
-from jpso_double_v2 import Swarm as Swarm_v2
+from jpso_double import Swarm as Swarm_jpso
+from ga import Swarm as Swarm_ga
 from steinertree import Tree
 import random
 from multiprocessing import Process,Value
@@ -23,7 +23,7 @@ medium = get_file(fp+'/medium_data/')
 def handle_file(f,swarm,v,t):
     nw = Network(f)
     s = swarm(nw)
-    if isinstance(s,Swarm_v2):
+    if isinstance(s,Swarm_ga):
         r = s.eval('rr')
     else:
         r = s.eval()
@@ -50,9 +50,9 @@ def cal(fl,swarm):
 def draw():
     try:
         print('JPSO Double')
-        v1_s,t1_s = cal(small,Swarm_v1)
+        v1_s,t1_s = cal(small,Swarm_jpso)
         print('\nGA')
-        v2_s,t2_s = cal(small,Swarm_v2)
+        v2_s,t2_s = cal(small,Swarm_ga)
 
         #v1_m,t1_m = cal(medium,Swarm_v1)
         #v2_m,t2_m = cal(medium,Swarm_v2)

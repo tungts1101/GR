@@ -58,8 +58,8 @@ class Swarm:
     
     def __update_global(self):
         self.target = []
-        self.zmax = [1e-9] * 4
-        self.zmin = [1e9] * 4
+        #self.zmax = [1e-9] * 4
+        #self.zmin = [1e9] * 4
     
         for particle in self.swarm:
             target = self.calculate_target(particle)
@@ -239,6 +239,7 @@ class Swarm:
                 self.swarm = sorted(swarm,key=lambda particle:self.fitness_evaluation(self.calculate_target(particle)))[:self.swarm_size]
                            
             self.__update_global()
+            #print(self.zmin,self.zmax)
             #cur_fv = sum(self.fitness)/len(self.fitness)
             cur_fv = float(self.g_err)
 
