@@ -49,11 +49,11 @@ def cal(fl,swarm):
 
 def draw():
     try:
-        # print('Small')
-        # print('JPSO Double')
-        # v1_s,t1_s = cal(small,Swarm_jpso)
-        # print('\nGA')
-        # v2_s,t2_s = cal(small,Swarm_ga)
+        print('Small')
+        print('JPSO Double')
+        v1_s,t1_s = cal(small,Swarm_jpso)
+        print('\nGA')
+        v2_s,t2_s = cal(small,Swarm_ga)
         
         print('Medium')
         print('JPSO Double')
@@ -73,11 +73,11 @@ def draw():
     us[1] = ''.join(['_' for _ in range(15)])
     us[2] = ''.join(['_' for _ in range(14)])
 
-    # print('|{:30}|{:15}|{:14}|{:15}|{:14}|'.format(us[0],us[1],us[2],us[1],us[2]))
+    print('|{:30}|{:15}|{:14}|{:15}|{:14}|'.format(us[0],us[1],us[2],us[1],us[2]))
     
-    # print('|{:30}|{:^15.2f}|{:^14.2f}|{:^15.2f}|{:^14.2f}|'.format('Source & relay nodes = 40',v1_s,v2_s,t1_s,t2_s))
+    print('|{:30}|{:^15.2f}|{:^14.2f}|{:^15.2f}|{:^14.2f}|'.format('Source & relay nodes = 40',v1_s,v2_s,t1_s,t2_s))
     
-    # print('{:92}'.format(''.join(['_' for _ in range(92)])))
+    print('{:92}'.format(''.join(['_' for _ in range(92)])))
     
     print('|{:30}|{:^15.2f}|{:^14.2f}|{:^15.2f}|{:^14.2f}|'.format('Source & relay nodes = 100',v1_m,v2_m,t1_m,t2_m))
     
