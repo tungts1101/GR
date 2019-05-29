@@ -225,7 +225,7 @@ class Particle:
         return weighted_sum + pareto
 
 class Swarm:
-    def __init__(self,network,swarm_size=10,generations=100,cg=20,delta=0.01,C0=0,C1=0.5):
+    def __init__(self,network,swarm_size=20,generations=150,cg=20,delta=0.01,C0=0,C1=0.5):
         self.network = network
         self.swarm_size = swarm_size
         self.generations = generations
