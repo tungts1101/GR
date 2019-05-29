@@ -6,6 +6,7 @@ import random
 from collections import defaultdict, Counter
 from functools import reduce
 import time
+from multiprocessing import Process,Manager
 
 class Particle:
     def __init__(self,network):
@@ -14,7 +15,7 @@ class Particle:
 
     def construct(self):
         edges = self.network.find_edges()
-        random.shuffle(edges)
+        #random.shuffle(edges)
         random.shuffle(edges)
         t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
         t.kruskal(edges,self.network.N)
@@ -24,7 +25,7 @@ class Particle:
         return "{}\n".format(self.solution.tree)
 
 class Swarm:
-    def __init__(self,network,swarm_size=20,max_iter=150,Pc=0.8,Pm=0.05,delta=0.01):
+    def __init__(self,network,swarm_size=10,max_iter=150,Pc=0.8,Pm=0.05,delta=0.01):
         self.network = network
         # init some constant variables
         self.swarm_size = swarm_size
@@ -43,12 +44,40 @@ class Swarm:
         self.zmin = [1e9] * 4
         
         self.fitness = []
-        self.g_err = None
+        self.g_err = 1e9
+        
+        def create_swarm(s_size,network):
+            s = []
+            # create particle function
+            def f(swarm,network):
+                particle = Particle(network)
+                swarm.append(particle)
 
-        for _ in range(swarm_size):
-            p = Particle(self.network)
-            p.construct()
-            self.swarm.append(p)
+            # create swarm in parallel
+            with Manager() as manager:
+                swarm = manager.list([])
+
+                mp = [Process(target=f,args=(swarm,network)) for _ in range(s_size)]
+
+                for p in mp:
+                    p.start()
+
+                for p in mp:
+                    p.join()
+
+                for particle in swarm:
+                    s.append(particle)
+
+            return s
+
+        self.swarm = create_swarm(self.swarm_size,self.network)
+        # for _ in range(swarm_size):
+            # p = Particle(self.network)
+            # p.construct()
+            # self.swarm.append(p)
+        
+        for particle in self.swarm:
+            particle.construct()
 
         self.__update_global()
 
@@ -58,23 +87,20 @@ class Swarm:
     
     def __update_global(self):
         self.target = []
-        #self.zmax = [1e-9] * 4
-        #self.zmin = [1e9] * 4
-    
         for particle in self.swarm:
             target = self.calculate_target(particle)
             self.target.append(target)
             self.update_target(target)
         
         self.fitness = []
-        for target in self.target:
-            fv = self.fitness_evaluation(target)
-            self.fitness.append(self.fitness_evaluation(target))
-        
-        idx = self.fitness.index(min(self.fitness))
-        self.solution = self.swarm[idx].solution
-        self.g_err = float(self.fitness[idx])
+        for idx,particle in enumerate(self.swarm):
+            fv = self.fitness_evaluation(self.target[idx])
+            self.fitness.append(fv)
 
+            if fv < self.g_err:
+                self.solution = particle.solution
+                self.g_err = float(fv)
+    
     def calculate_target(self,p):
         return (
             self.network.energy_consumption(p.solution),
@@ -91,10 +117,9 @@ class Swarm:
     def is_dominated(self,solution):
         flag = False
         for another_solution in self.target:
-            if another_solution != solution:
-                flag = reduce((lambda x,y:x&y),[x<y for (x,y) in zip(another_solution,solution)])
-                if flag:
-                    return flag
+            flag = reduce((lambda x,y:x&y),[x<y for (x,y) in zip(solution,another_solution)])
+            if flag:
+                return flag
 
         return flag
 
@@ -242,7 +267,7 @@ class Swarm:
             #print(self.zmin,self.zmax)
             #cur_fv = sum(self.fitness)/len(self.fitness)
             cur_fv = float(self.g_err)
-
+            #print('err at {} = {}'.format(i,cur_fv))
             if abs(cur_fv - pred_fv) < self.delta:
                 k += 1
             else:
@@ -257,4 +282,8 @@ class Swarm:
             'gen': i,
             'value': self.g_err
         }
+
+        if not self.solution.is_fisible(self.network.distance,self.network.trans_range):
+            print('Not OK')
+
         return result 
