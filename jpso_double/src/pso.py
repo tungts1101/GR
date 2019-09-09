@@ -8,6 +8,11 @@ from functools import reduce
 import time
 from multiprocessing import Process,Manager
 
+def get_solution(network,layer):
+    t = Tree(root=network.sink,compulsory_nodes=network.terminals)
+    t.decode(layer,network.distance,network.trans_range)
+    return t
+
 class Particle:
     def __init__(self,network):
         self.network = network
@@ -16,17 +21,15 @@ class Particle:
         l2 = self.__gen_l2()
         l1 = self.__gen_l1_from_l2(l2)
         self.c_pos = [l1,l2]
-        self.c_target = []
         self.eval()
         
         # best position & best error
         self.b_pos = self.c_pos
-        self.b_target = self.c_target
-        self.b_err = None
+        self.objective, self.c_err, self.b_err = None, None, None
 
     def __gen_l2(self):
         # create a fisible solution
-        t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
+        t = Tree(root=self.network.sink,compulsory_nodes=self.network.terminals)
         # find all eligible edges
         edges = self.network.find_edges()
         # shuffle edges to make our swarm more diversified
@@ -44,7 +47,7 @@ class Particle:
     def __gen_l1_from_l2(self,l2):
         l1 = []
         for i in range(self.network.N):
-            if i not in self.network.comp_nodes:
+            if i not in self.network.terminals:
                 if i in set(l2):
                     l1.append(1)
                 else:
@@ -88,7 +91,7 @@ class Particle:
 
         def anx(p1,p2):
             # construct tree from 2 layers
-            p1_tree,p2_tree = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes),Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
+            p1_tree,p2_tree = Tree(root=self.network.sink,compulsory_nodes=self.network.terminals),Tree(root=self.network.sink,compulsory_nodes=self.network.terminals)
             p1_tree.decode(p1,self.network.distance,self.network.trans_range)
             p2_tree.decode(p2,self.network.distance,self.network.trans_range)
 
@@ -148,7 +151,7 @@ class Particle:
         offspring = anx(p1,p2)
         rem(offspring)
 
-        t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
+        t = Tree(root=self.network.sink,compulsory_nodes=self.network.terminals)
         t.decode(offspring,self.network.distance,self.network.trans_range)
         if t.is_fisible(self.network.distance,self.network.trans_range):
             return offspring
@@ -161,7 +164,7 @@ class Particle:
         return o1
 
     def __tree_evol(self, p1_1, p1_2, p2_2):
-        p1_tree,p2_tree = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes),Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
+        p1_tree,p2_tree = Tree(root=self.network.sink,compulsory_nodes=self.network.terminals),Tree(root=self.network.sink,compulsory_nodes=self.network.terminals)
 
         p1_tree.decode(p1_2,self.network.distance,self.network.trans_range)
         p2_tree.decode(p2_2,self.network.distance,self.network.trans_range)
@@ -176,7 +179,7 @@ class Particle:
         candidates = [edge for edge in residuals if edge not in edges]
         candidates.sort(key=lambda x:self.network.distance(x[0],x[1]))
 
-        t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
+        t = Tree(root=self.network.sink,compulsory_nodes=self.network.terminals)
         t.kruskal(intersections + edges + candidates,self.network.N)
         
         layer_len = 2*(self.network.N - 1)
@@ -186,14 +189,12 @@ class Particle:
 
     def repair(self):
         pass
-    
-    # update current target
-    def eval(self):
-        t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
-        layer = self.c_pos[1]
-        t.decode(layer,self.network.distance,self.network.trans_range)
 
-        self.c_target = [
+    # update current objective
+    def eval(self):
+        t = get_solution(self.network,self.c_pos[1])
+        
+        self.objective = [
             self.network.energy_consumption(t),
             self.network.network_lifetime(t),
             self.network.convergence_time(t),
@@ -205,31 +206,27 @@ class Particle:
     # of each objective
     # flag is True if particle is dominated in Pareto
     # otherwise is False
-    def update(self,zmax,zmin,c_flag,b_flag):
-        c_fv = self.__fv(self.c_target,zmax,zmin,c_flag)
-        b_fv = self.__fv(self.c_target,zmax,zmin,c_flag)
+    def update(self,zmin,zmax,flag):
+        self.c_err = self.fv(zmax,zmin,flag)
 
-        if c_fv < b_fv:
+        if self.b_err == None or self.c_err < self.b_err:
             self.b_pos = self.c_pos
-            self.b_target = self.c_target
-            self.b_err = float(c_fv)
-        else:
-            self.b_err = float(b_fv)
-    1
+            self.b_err = float(self.c_err)
+    
     # fitness evaluation
-    def __fv(self,target,zmax,zmin,flag):
+    def fv(self,zmax,zmin,flag):
         # add 1e-6 in numerator and denominator to handle
         # zero case
-        weighted_sum = sum([(target[j] - zmin[j] + 1e-6)/(zmax[j]-zmin[j] + 1e-6) for j in range(len(target))])
+        weighted_sum = sum([(self.objective[j] - zmin[j] + 1e-6)/(zmax[j]-zmin[j] + 1e-6) for j in range(len(self.objective))])
         pareto = 1 if flag else 0
         return weighted_sum + pareto
 
 class Swarm:
-    def __init__(self,network,swarm_size=20,generations=150,cg=20,delta=0.01,C0=0,C1=0.5):
+    def __init__(self,network,swarm_size=50,generations=150,stall_gen=20,delta=0.01,C0=0,C1=0.5):
         self.network = network
         self.swarm_size = swarm_size
         self.generations = generations
-        self.cg = cg # consecutive generations
+        self.stall_gen = stall_gen
         self.delta = delta
         self.C0 = C0
         self.C1 = C1
@@ -239,75 +236,52 @@ class Swarm:
         self.g_err = 1e9
         self.zmin = [1e9] * 4
         self.zmax = [1e-9] * 4
+        self.cur_gen = 1
+        self.cur_sg = 0
+        self.running_time = 0
         
         self.swarm = []
+        for _ in range(self.swarm_size):
+            p = Particle(network)
+            p.eval()
+            self.update_objective(p.objective)
+            self.swarm.append(p)
+
+        for p in self.swarm:
+            flag = self.is_dominated(p)
+            p.update(self.zmax,self.zmin,flag)
         
-        def create_swarm(s_size,network):
-            s = []
-            # create particle function
-            def f(swarm,network):
-                particle = Particle(network)
-                swarm.append(particle)
-
-            # create swarm in parallel
-            with Manager() as manager:
-                swarm = manager.list([])
-
-                mp = [Process(target=f,args=(swarm,network)) for _ in range(s_size)]
-
-                for p in mp:
-                    p.start()
-
-                for p in mp:
-                    p.join()
-
-                for particle in swarm:
-                    s.append(particle)
-
-            return s
-        
-        self.swarm = create_swarm(self.swarm_size,self.network)
         # update global best position & global best error
-        for particle in self.swarm:
-            # always update zmin,zmax with current target of particle
-            self.update_target(particle.c_target)
-        
-        for particle in self.swarm:
-            # update b_err in each particle
-            c_flag = self.is_dominated(particle.c_target)
-            b_flag = self.is_dominated(particle.b_target)
+        self.update_global()
 
-            particle.update(self.zmax,self.zmin,c_flag,b_flag)
+    def is_dominated(self,p1):
+        for p2 in self.swarm:
+            if self.dominates(p2,p1):
+                return True
 
-            # compare global error with best error of particle
+        return False
+
+    def dominates(self,p1,p2):
+        return reduce((lambda x,y:x&y),[x<y for (x,y) in zip(p1.objective,p2.objective)])
+
+    def update_objective(self,objective):
+        self.zmax[:] = [max(x,y) for (x,y) in zip(self.zmax,objective)]
+        self.zmin[:] = [min(x,y) for (x,y) in zip(self.zmin,objective)]
+    
+    def can_stop(self):
+        return self.cur_gen > self.generations or self.cur_sg > self.stall_gen or self.running_time > 15*60000
+
+    def update_global(self):
+        for particle in self.swarm:
             if particle.b_err < self.g_err:
                 self.g_pos = particle.b_pos
                 self.g_err = float(particle.b_err)
-    
-    def is_dominated(self,target):
-        flag = False
-
-        for particle in self.swarm:
-            flag = reduce((lambda x,y:x&y),[x<y for (x,y) in zip(target,particle.b_target)])
-            if flag:
-                return flag
-
-        return flag
-    
-    def update_target(self,target):
-        self.zmax[:] = [max(x,y) for (x,y) in zip(self.zmax,target)]
-        self.zmin[:] = [min(x,y) for (x,y) in zip(self.zmin,target)]
-
+        
     def eval(self):
-        def can_stop(gen,cons_gen):
-            return gen > self.generations or cons_gen > self.cg
-
-        i,k = 0,0
-
         start = time.time()
 
-        while not can_stop(i,k):
-            pred_val = float(self.g_err)
+        while not self.can_stop():
+            prv_g_err = float(self.g_err)
 
             # particle flies in here
             for particle in self.swarm:
@@ -331,45 +305,26 @@ class Swarm:
                 # repair particle
                 particle.repair()
 
-                # udpate c_target in particle
+                # udpate c_objective in particle
                 particle.eval()
 
                 # update Zmin,Zmax
-                self.update_target(particle.c_target)
+                self.update_objective(particle.objective)
 
                 # update individual best
-                c_flag = self.is_dominated(particle.c_target)
-                b_flag = self.is_dominated(particle.b_target)
-                particle.update(self.zmax,self.zmin,c_flag,b_flag)
+                flag = self.is_dominated(particle)
+                particle.update(self.zmax,self.zmin,flag)
 
             # update global best
-            for particle in self.swarm:
-                if particle.b_err < self.g_err:
-                    self.g_pos = particle.b_pos
-                    self.g_err = float(particle.b_err)
-                            
-            cur_val = float(self.g_err)
-            #print("err at {} = {}".format(i,cur_val))
+            self.update_global()
+            
+            cur_g_err = float(self.g_err)
+            self.cur_sg = self.cur_sg + 1 if abs(cur_g_err - prv_g_err) < self.delta else 0
+            self.cur_gen += 1
+            self.running_time = time.time() - start
 
-            if abs(cur_val - pred_val) < self.delta:
-                k += 1  # increase when g_err did not change so much
-            else:
-                k = 0   # otherwise set k = 0
-
-            i += 1
-        
-        end = time.time()
-
-        result = {
-            'time': end - start,
-            'gen': i,
-            'value': self.g_err
-        }
-
-        t = Tree(root=self.network.sink,compulsory_nodes=self.network.comp_nodes)
-        t.decode(self.g_pos[1],self.network.distance,self.network.trans_range)
-        if not t.is_fisible(self.network.distance,self.network.trans_range):
+        if not get_solution(self.network,self.g_pos[1]).is_fisible(self.network.distance,self.network.trans_range):
             print('Not OK')
+            exit(0)
 
-        return result
-
+        return {"error": self.g_err, "running_time": self.running_time, "generations": self.cur_gen}

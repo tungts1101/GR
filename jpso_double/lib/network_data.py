@@ -22,7 +22,7 @@ class Network:
         nw = inp.from_file(filename)
         self.sink = 0
         self.sources = [i for i in range(1,nw.num_of_sensors+1)]
-        self.comp_nodes = [self.sink] + self.sources
+        self.terminals = [self.sink] + self.sources
         self.relays = [i for i in range(nw.num_of_sensors+1,nw.num_of_sensors+nw.num_of_relays+1)]
         self.N = nw.num_of_sensors + nw.num_of_relays + 1
         self.area = (nw.W,nw.H)
