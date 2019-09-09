@@ -2,7 +2,7 @@ import sys,os
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'lib'))
 
 from network_data import Network
-from pso import Swarm as Swarm_jpso
+from jpso import Swarm as Swarm_jpso
 from ga import Swarm as Swarm_ga
 from nsga_ii import Swarm as Swarm_nsga
 from steinertree import Tree
@@ -46,7 +46,7 @@ def cal(fl,swarm):
     v = list(v)
     g = list(g)
 
-    return {'mean': mean(v), 'var': variance(v), 'time': t, 'gen': mean(g)}
+    return {'mean': mean(v), 'var': variance(v), 'time': t.value, 'gen': mean(g)}
 
 def mean(arr):
     return sum(arr)/len(arr)
