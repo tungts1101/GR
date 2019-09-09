@@ -21,7 +21,7 @@ class Network:
             return random.sample(coord,N) 
         self.sink = sink
         self.sources = sources
-        self.comp_nodes = [self.sink] + self.sources
+        self.terminals = [self.sink] + self.sources
         self.N = N
         self.relays = [node for node in range(self.N) if node is not sink and node not in sources]
         
