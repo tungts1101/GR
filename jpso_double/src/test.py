@@ -7,7 +7,7 @@ from ga import Swarm as Swarm_ga
 from nsga_ii import Swarm as Swarm_nsga
 from steinertree import Tree
 import random
-from multiprocessing import Process,Value,Array
+from multiprocessing import Process,Value,Manager
 
 fp = os.path.join(os.path.dirname(__file__),'../../WusnNewModel/data')
 
@@ -21,7 +21,7 @@ def get_file(d):
 small = get_file(fp+'/small_data/')
 medium = get_file(fp+'/medium_data/')
 
-def handle_file(f,swarm,v,t):
+def handle_file(f,swarm,v,t,g):
     nw = Network(f)
     s = swarm(nw)
     #print("{} {:.2f} {:.2f}".format(f[51:],r['value'],r['time']))
@@ -31,11 +31,11 @@ def handle_file(f,swarm,v,t):
     g.append(r['generations'])
 
 def cal(fl,swarm):
-    v = Array('d',50)
+    v = Manager().list()
     t = Value('d',0.0)
-    g = Array('i',50)
+    g = Manager().list()
     
-    all_processes = [Process(target=handle_file,args=(f,swarm,v,t)) for f in fl]
+    all_processes = [Process(target=handle_file,args=(f,swarm,v,t,g)) for f in fl]
 
     for p in all_processes:
         p.start()
@@ -43,7 +43,8 @@ def cal(fl,swarm):
     for p in all_processes:
         p.join()
     
-    l = len(fl)
+    v = list(v)
+    g = list(g)
 
     return {'mean': mean(v), 'var': variance(v), 'time': t, 'gen': mean(g)}
 
