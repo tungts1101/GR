@@ -1,0 +1,104 @@
+\documentclass[12pt,oneside,portrait,a4paper]{book}
+%\documentclass[12pt, a4paper, reqno, oneside]{book}
+\usepackage[utf8]{vietnam}
+\usepackage[mathscr]{eucal}
+\usepackage{indentfirst}
+%\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{amsmath,amsxtra,latexsym,amsthm, amssymb, amscd}
+\DeclareGraphicsRule{*}{eps}{*}{}
+\usepackage{fancyhdr}
+% \usepackage{extsizes}
+\usepackage{extsizes}
+\usepackage{varioref}
+\usepackage{moreverb,graphicx}
+\usepackage{enumerate,array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage[portrait, top=3cm, bottom=3.5cm, left=3.5cm, right=2cm] {geometry}
+\usepackage{algpseudocode}
+%\usepackage[portrait, top=2cm, bottom=2cm, left=2cm, right=2cm] {geometry}
+% =============Gói lệnh dùng để liên kết hyperlinks============%
+% \usepackage{hyperref}%mặc định
+\usepackage[unicode]{hyperref}%có màu cho links
+% \usepackage{hyperref}
+%\usepackage[colorlinks,citecolor=black,filecolor=black,linkcolor=black,urlcolor=black]{hyperref}%các liên kết màu đen
+%\usepackage[unicode,colorlinks,citecolor=black,filecolor=black,linkcolor=black,urlcolor=black]{hyperref}%các liên kết màu đen
+% \voffset = -2.25 truecm %Khoảng từ mép giấy trên đến mép văn bản 
+% \hoffset = -0.5 truecm %Khoảng từ mép giấy trái đến mép văn bản
+% \textheight 25.75 truecm %Độ dài của trang 
+% \textwidth 16 truecm %Độ rộng của trang
+% \parskip 3pt %Khoảng cách cộng thêm khi sang đoạn mới
+% \headsep=14truept %Khoảng từ chân tiêu đề chạy đến dòng văn bản
+% 
+%\theoremstyle{plain}
+\theoremstyle{definition}
+ \newtheorem{theorem}{Định lý}
+\newtheorem{prof}{Chứng minh}
+\theoremstyle{remark}
+\newtheorem{note}[theorem]{\bf Chú ý}
+\newtheorem{vd}[theorem]{\bf Ví dụ}
+\newtheorem{nx}[theorem]{\bf Nhận xét}
+\newtheorem{remark}[theorem]{\bf Nhận xét}
+\newtheoremstyle{vd}% name
+  {3pt}%      Space above
+  {3pt}%      Space below
+  {}%         Body font
+  {}%         Indent amount (empty = no indent, \parindent = para indent)
+  {\bfseries}% Thm head font
+  {.}%        Punctuation after thm head
+  {.5em}%     Space after thm head: " " = normal interword space;
+        %       \newline = linebreak
+  {}%  
+\def\du#1=#2(#3){#1\equiv#2\pmod{#3}}
+\newcommand{\gen}[1]{\langle #1\rangle}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\MM}{\mathbb{M}}
+\newcommand{\HH}{\mathbb{H}}
+\newcommand{\II}{\mathbb{I}}
+\renewcommand{\chaptername}{Chương}
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\proofname}{Chứng minh}
+\renewcommand{\bibname}{Tài liệu tham khảo}
+\renewcommand{\appendixname}{Phụ lục}
+%INDEX%%
+\usepackage{makeidx}
+\usepackage[nottoc]{tocbibind}
+\renewcommand{\baselinestretch}{1.5}
+\makeindex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \setcounter{secnumdepth}{2}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{algorithmic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\setcounter{tocdepth}{3}
+\begin{document}
+\setcounter{tocdepth}{2}
+\fontsize{13pt}{12}\selectfont    
+%\input{biachinh}
+%\input{biaphu}
+\setlength{\baselineskip}{18pt}
+\pagenumbering{roman}
+\pagestyle{plain}
+%\include{Loicamon}
+\tableofcontents
+\listoffigures
+\listoftables
+\fontsize{13pt}{12}\selectfont 
+\setcounter{page}{1}
+\pagenumbering{arabic}
+%\include{Chuong1}
+\include{demo-Chapter1}
+\include{Chuong3}
+%\include{Phan2}
+%\include{Phan3}
+%\include{Ketluan}
+%\include{congtrinh}
+\include{refs}
+\end{document}
