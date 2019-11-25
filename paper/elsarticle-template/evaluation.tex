@@ -1,0 +1,35 @@
+\section{Evaluation}
+
+
+\subsection{Dataset preparation}
+
+
+	We evaluated the fitness error and the consuming time on each instance when comparing JPSODL, a proposed method in \cite{lu2014construction}, with GA. Two datasets were created for our experiment, which are the medium one and the small one. The parameters for each dataset are shown in and these for simulation are shown in .
+	
+	Each dataset was divided into three categories based on the implemented sensors allocated strategy, which is random based, uniform or gamma distribution. Moreover, we did not distribute sensors in only one type of terrain, but in 10 different types, in both height and evenness, for the diversity expectation.
+	
+	All methods was implemented in Python 3 and the experiment was carried out on Ubuntu Linux 16.04 iwth Intel Core i5. The parallelism is applied for simultaneously calculating on all instances, so the running time on each instance may be slowed down a little bit, but the overall performance is not affected.
+	
+	Two heuristics method share some configurations, which are:
+\begin{itemize}
+	\item Number of individuals: 50
+	\item Max number of generations: 150
+	\item Max number of stall generations: 20
+	\item Delta to detect a stall fitness error: 0.01
+	\item Max running time: 900 seconds
+\end{itemize}
+	
+	GA has two separate paramaters, which are:
+\begin{itemize}
+	\item Crossover ratio: 0.8
+	\item Mutation ratio: 0.05
+\end{itemize}
+
+\subsection{Experimental result}
+
+\subsection{Complexity Runtime Analysis}
+	
+%By heavily using Kruskal algorithm, the most time consuming step in GA, which is crossover, will acquire no more than O((m+n) log(m+n)) with m and n is the length of two edge sets.	 
+%Calculating each group needs no more than O(m), where m is the length of the longer edge set if we use a dictionary to store information in a tree. And Kruskal algorithm will have amortized time is O((m+n) log (m+1))
+%Getting all leaves and removing one can be done in constant time if we construct a set to store all leaves in building tree procedure and a dictionary to get one node’s parent. This repair scheme will acquire at most O(l), where l is the length of the leaves set.
+%The next generation will be chosen by the best selection method, which is only individuals with the best fitness value will be kept. This step takes no more than O(s), where s is the size of the population.
