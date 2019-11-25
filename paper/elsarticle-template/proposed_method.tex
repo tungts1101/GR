@@ -49,7 +49,12 @@
 \subsection{Representation of individual}
 	No matter how one Steiner tree problem is encoded, two main properties must be held: a sink node and every sensor nodes will be contained and all leaves will be sensor nodes. To achieve a feasible solution, each individual of the population is encoded as a set of edges contained in the tree.
 
-\noindent\makebox[\textwidth]{\includegraphics[width=.5\paperwidth]{Images/EdgeSetRepresentation}}
+%\noindent\makebox[\textwidth]{\includegraphics[width=.2\paperwidth]{Images/EdgeSetRepresentation}}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{Images/EdgeSetRepresentation}
+\end{figure}
 
 	An edge set representation of this tree is: \{(0,7), (0,8), (0,9), (0,16), (7,6), (6,11), (9,4), (9,5), (16,15), (16, 17), (16,21), (18,14), (18,19), (18,23), (18,24)\}.
 
@@ -94,5 +99,10 @@
 	Reminding that adding another edge between 2 nodes in a tree will definitely lead to an inadmissible when descendant node has 2 parent. A simple proposed solution is removing an older edge between the descendant and its older parent.
 
 \noindent\makebox[\textwidth]{\includegraphics[width=.8\paperwidth]{Images/EdgeSetMutation}}
+%\noindent\makebox[\textwidth]{\includegraphics[width=.8\paperwidth]{Images/EdgeSetMutation}} 
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{Images/EdgeSetMutation}
+\end{figure}
 
 	The next generation will be chosen by the best selection method, which is only individuals with the best fitness value will be kept.
