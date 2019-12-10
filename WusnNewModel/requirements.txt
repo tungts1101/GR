@@ -1,0 +1,8 @@
+joblib==0.13.2
+logzero==1.5.0
+numpy==1.16.2
+ortools==7.1.6720
+protobuf==3.7.1
+PuLP==1.6.9
+pyparsing==2.4.0
+six==1.12.0

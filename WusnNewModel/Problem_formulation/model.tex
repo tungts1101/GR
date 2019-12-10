@@ -1,0 +1,53 @@
+\documentclass[paper.tex]{subfiles}
+\begin{document}
+	\section{Network model and problem definition} \label{sec:model}
+	\subsection{Model and Assumptions}
+	We have the following assumptions about the \ac{WSNs} that we consider in this paper. The 3D terrain is defined according to the \ac{DEM} standard which represented by a matrix of rows and columns who values are terrain elevations. We also assume that the sensor nodes positions are fixed on terrain. The \ac{BS} located in center of the 3D terrain. The sensors gather sensing data from environment after that they send data to \ac{BS} through relay nodes, and finally give them to users. A sensor node consumes power for three main tasks: sensing, processing and sending data. We formulate the problem as follows:
+	
+	\textbf{Input}
+	\begin{itemize}
+		\item  $S = \{s_1, s_2,...,s_n\}$ is set of sensor nodes in 3D terrain, where $s_i = (x^s_i, y^s_i, h^s_i)$
+		\item  $F = \{f_1,f_2,...,f_m\}$ is set of possible relay node positions, where $f_j = (x^f_j, y^f_j,h^f_j)$
+		\item  $Fc_i = \{f_{i1}, f_{i2},...,f_{ik_i}\},~~f_{it} \in F$ is a set of possible relay positions which can connect to the sensor node $s_i$.
+		\item  $Sc_j = \{s_{j1},s_{j2},...,s_{jx_j}\},~~s_{jt} \in S$ is set of sensor nodes which can connect to the possible relay position $f_j$
+		\item The power consumption of a sensor node for sending $l-bits$ data to a relay node located $f_j$ is calculated as follows 
+			\begin{equation}\label{eq:etij}
+			Et_{ij} = l*(E_{TX} + \epsilon_{fs} * d^2_{ij})
+			\end{equation}
+		\item The power consumption of a relay node located $f_j$ receiving from $x_j$ the sensor nodes, aggregating and sending these data to \ac{BS}
+			\begin{equation}\label{erj}
+				Er_{j} = l*(x_j * E_{RX} + x_j* E_{DA} + \epsilon_{mp}*d_{jtoBS}^4)
+			\end{equation}
+		where $d_{ij}$ is the 3D distance from a sensor node $s_i$ to a possible relay node located $f_j$, $d_{jtoBS}$ is the 3D distance from a possible relay node position $f_j$ to the \ac{BS} position. Sensor nodes have the same communication radius. $l$ is the number of bits in each data packet and recommended by $500$ bytes. $E_{TX}$ is the energy dissipated per bit to run the transmitter or the receiver circuit and recommended by $50 nJ/bit$. $\epsilon_{fs}$ and $\epsilon_{mp}$ are the energy expenditures of transmitting one bit data at a short and a long distance respectively to achieve an acceptable bit error rate. They are recommended by $10pJ/bit/m^2$ and $0.0013pJ/bit/m^4$, respectively. $E_{DA}$ is the energy consumption for data aggregation and recommended
+		by $5pJ/bit$
+	\end{itemize}
+
+	\textbf{Output}
+	\begin{itemize}
+		\item  $Z = (z_j)_{m\times 1}$ is a set of decision variables where $z_j$ = 1 if an relay node is deployed at $f_j \in F$ and $z_j = 0$ if otherwise. 
+		\item $A = (a_{ij})_{n\times m}$ is a set of decision variables where $a_{ij} = 1$ iff $s_i$ assigned to $f_j$.
+	\end{itemize}
+
+	\textbf{Constraints}
+	\begin{itemize}
+		\item  Each sensor node should be relayed by exactly one relay node which located in the sensor node's communication range.
+		\begin{equation}
+			\sum_{j=1}^{m}a_{ij}*c_{ij} = 1 ~~ \forall i = 1,...,n
+		\end{equation}	
+		\begin{equation}
+			c_{ij} = \begin{cases}
+			1, & f_j \in Fc_i\\
+			0, & \text{otherwise}
+			\end{cases}
+		\end{equation}
+	\end{itemize}
+
+	\textbf{Objective}
+	\begin{itemize}
+		\item Minimize the number of relay nodes
+		\item Minimize the maximum of energy consumption. 
+	\end{itemize}
+
+	%\subsection{The network lifetime maximization problem and its NP-Hardness}
+	
+\end{document}

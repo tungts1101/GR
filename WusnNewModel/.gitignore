@@ -1,0 +1,6 @@
+.idea/
+.vscode/
+venv/
+cache/
+**/__pycache__/
+google-colab.ipynb
