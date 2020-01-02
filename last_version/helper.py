@@ -14,8 +14,8 @@ class Helper:
 
     @classmethod
     def crossover(cls,t1,t2,network):
-        assert(t1.__class__.__name__ == "SteinerTree")
-        assert(t2.__class__.__name__ == "SteinerTree")
+        #assert(t1.__class__.__name__ == "SteinerTree")
+        #assert(t2.__class__.__name__ == "SteinerTree")
 
         t1_fringe = t1.get_all_edges()
         t2_fringe = t2.get_all_edges()

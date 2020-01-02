@@ -88,13 +88,13 @@ class Swarm:
     def crossover(self,p1,p2):
         p = Particle(self.network)
         p.pos = Helper.crossover(p1.pos,p2.pos,self.network)
-        assert(p.pos.is_fisible())
+        #assert(p.pos.is_fisible())
         return p
     
     def mutate(self,particle):
         p = Particle(self.network)
         p.pos = Helper.mutate(particle.pos,self.network)
-        assert(p.pos.is_fisible())
+        #assert(p.pos.is_fisible())
         return p
 
     def eval(self):
@@ -126,6 +126,6 @@ class Swarm:
             self.cur_sg = self.cur_sg + 1 if abs(cur_g_err - prv_g_err) < self.delta else 0
             self.cur_gen += 1
  
-        assert(self.g_pos.is_fisible())
+        #assert(self.g_pos.is_fisible())
         running_time = time.time() - start
         return {"error": self.g_err, "running time": running_time, "generations": self.cur_gen} 
