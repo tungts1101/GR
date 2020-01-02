@@ -115,6 +115,7 @@ def eval_sg(filesize, size):
     ga_dataset = defaultdict(lambda: [])
 
     for time in range(times):
+        print("Time = {}".format(time))
         r = cal(filesize,sga,run_with_same_generations)
         
         r.sort(key=lambda x: x['file'])
