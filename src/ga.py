@@ -1,8 +1,9 @@
 import random
-from collections import defaultdict, Counter
 from functools import reduce
 import time
 from helper import Helper
+import config
+
 
 class Particle:
     def __init__(self,network):
@@ -11,6 +12,7 @@ class Particle:
 
     def __repr__(self):
         return "{}\n".format(self.pos.tree)
+
 
 class Swarm:
     def __init__(self,network,swarm_size=50,generations=150,stall_gen=20,Pc=0.8,Pm=0.05,delta=0.01):
@@ -59,9 +61,9 @@ class Swarm:
         self.zmax[:] = [max(x,y) for (x,y) in zip(self.zmax,objective)]
         self.zmin[:] = [min(x,y) for (x,y) in zip(self.zmin,objective)]
 
-    def is_dominated(self,p1):
-        for p2 in self.swarm:
-            if self.dominates(p2,p1):
+    def is_dominated(self,p):
+        for _p in self.swarm:
+            if self.dominates(_p,p):
                 return True
 
         return False
@@ -71,7 +73,7 @@ class Swarm:
 
     def fitness_evaluation(self,particle):
         objective = particle.objective
-        weighted_sum = sum([(objective[j] - self.zmin[j] + 1e-6)/(self.zmax[j] - self.zmin[j] + 1e-6) for j in range(4)])
+        weighted_sum = sum([(objective[j] - self.zmin[j] + 1e-6)/max(self.zmax[j] - self.zmin[j],1e-6) for j in range(4)])
         pareto = 1 if self.is_dominated(particle) else 0
         return weighted_sum + pareto
     
@@ -88,13 +90,15 @@ class Swarm:
     def crossover(self,p1,p2):
         p = Particle(self.network)
         p.pos = Helper.crossover(p1.pos,p2.pos,self.network)
-        #assert(p.pos.is_fisible())
+        if config.DEBUG:
+            assert(p.pos.is_fisible())
         return p
     
     def mutate(self,particle):
         p = Particle(self.network)
         p.pos = Helper.mutate(particle.pos,self.network)
-        #assert(p.pos.is_fisible())
+        if config.DEBUG:
+            assert(p.pos.is_fisible())
         return p
 
     def eval(self):
@@ -104,15 +108,15 @@ class Swarm:
             prv_g_err = float(self.g_err)
 
             P = list(self.swarm)
-            
-            # mutation
-            Q1 = [self.mutate(P[i]) for i in range(len(P)) if random.uniform(0,1) < self.Pm]
 
             # crossover
-            c = [i for i in range(len(P)) if random.uniform(0,1) < self.Pc]
+            c = [i for i in range(len(P)) if random.uniform(0, 1) < self.Pc]
             random.shuffle(c)
-            c = c[:len(c) - len(c)%2]
-            Q2 = [self.crossover(P[i],P[j]) for (i,j) in zip (c[:len(c)//2],c[len(c)//2:])]
+            c = c[:len(c) - len(c) % 2]
+            Q1 = [self.crossover(P[i], P[j]) for (i, j) in zip(c[:len(c) // 2], c[len(c) // 2:])]
+
+            # mutate
+            Q2 = [self.mutate(P[i]) for i in range(len(P)) if random.uniform(0,1) < self.Pm]
 
             # selection
             swarm = P + Q1 + Q2
@@ -120,12 +124,12 @@ class Swarm:
             
             self.swarm = sorted(swarm,key=lambda particle:self.fitness_evaluation(particle))[:self.swarm_size]
             self.update_global()
-            
-            cur_fv = float(self.g_err)
+
             cur_g_err = float(self.g_err)
             self.cur_sg = self.cur_sg + 1 if abs(cur_g_err - prv_g_err) < self.delta else 0
             self.cur_gen += 1
- 
-        #assert(self.g_pos.is_fisible())
+
+        if config.DEBUG:
+            assert(self.g_pos.is_fisible())
         running_time = time.time() - start
-        return {"error": self.g_err, "running time": running_time, "generations": self.cur_gen} 
+        return {"error": self.g_err, "running time": running_time, "generation": self.cur_gen}

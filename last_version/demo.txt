@@ -1,6 +1,0 @@
-Small
-PSO
-dataset			avg_err		best_err	worst_err	avg_rt		best_rt		worst_rt
-uu-dem7_r50_1.in    		   0.096		2.37e-06	   0.188	 150.323		 143.372		 156.174
-no-dem2_r50_1.in    		   0.063		2.03e-06	   0.143	 148.828		 139.429		 158.756
-ga-dem2_r50_1.in    		   0.074		2.12e-06	   0.192	 144.508		 137.239		 152.753

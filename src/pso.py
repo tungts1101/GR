@@ -1,9 +1,10 @@
 from steinertree import SteinerTree
 import random
-from collections import defaultdict, Counter
 from functools import reduce
 from dle import DLE
 import time
+import config
+
 
 class Particle:
     def __init__(self,network):
@@ -21,8 +22,6 @@ class Particle:
         self.c_err, self.b_err = None, None
     
     def fly(self,pos,flag):
-        offspring = None
-
         if flag:
             offspring = DLE.ewd_evolution(self.c_pos, pos)
         else:
@@ -81,9 +80,9 @@ class Swarm:
 
         self.update_global()
 
-    def is_dominated(self, p1):
-        for p2 in self.swarm:
-            if self.dominates(p2,p1):
+    def is_dominated(self, p):
+        for _p in self.swarm:
+            if self.dominates(_p,p):
                 return True
         return False
 
@@ -111,12 +110,10 @@ class Swarm:
         while not self.can_stop():
             prv_g_err = float(self.g_err)
             
-            ######
-            
             for particle in self.swarm:
                 R = random.randint(0,1)
 
-                if self.C0 < R and R <= self.C0 + self.C1:
+                if self.C0 < R <= self.C0 + self.C1:
                     p_layer_1 = particle.c_pos.layer_1
                     b_layer_1 = particle.b_pos.layer_1
                     flag = (p_layer_1 == b_layer_1)
@@ -143,17 +140,12 @@ class Swarm:
             # update global best
             self.update_global()
 
-            ######
-
             cur_g_err = float(self.g_err)
             self.cur_sg = self.cur_sg + 1 if abs(cur_g_err - prv_g_err) < self.delta else 0
             self.cur_gen += 1
 
-        assert(self.g_pos.decode().is_fisible())
+        if config.DEBUG:
+            assert(self.g_pos.decode().is_fisible())
         
         running_time = time.time() - start
-        return {
-            'error' : self.g_err,
-            'running time' : running_time,
-            'generations' : self.cur_gen
-        }
+        return {"error": self.g_err, "running time": running_time, "generation": self.cur_gen}
