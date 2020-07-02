@@ -32,7 +32,7 @@ def run_with_same_generation(f,swarm,res):
         {
             'file': os.path.split(os.path.abspath(f))[1],
             'error': r['error'],
-            'running time': r['running time'],
+            'running time': r['running_time'],
             'generation': r['generation']
         }
     )
@@ -47,7 +47,7 @@ def run_with_diff_generation(f,swarm,res):
         {
             'file': os.path.split(os.path.abspath(f))[1],
             'error': r['error'],
-            'running time': r['running time'],
+            'running time': r['running_time'],
             'generation': r['generation']
         }
     )
@@ -146,11 +146,19 @@ def summarize_nsga(records):
     ret = []
 
     for record in records:
+        obj = record['front'].objective
+        res = dict()
+        res['ec'] = obj[0]
+        res['nl'] = obj[1]
+        res['ct'] = obj[2]
+        res['ci'] = obj[3]
+
         ret.append([
-            record['ec'],
-            record['nl'],
-            record['ct'],
-            record['ci']
+            record['file'],
+            res['ec'],
+            res['nl'],
+            res['ct'],
+            res['ci']
         ])
 
     return ret
@@ -180,26 +188,26 @@ def export_csv(csvf,result):
             })
 
 
-def export_csv_nsga(csvf, result):
-    with open(csvf,mode='w') as exp_file:
-        fnames = [
-            'Energy consumption',
-            'Network lifetime',
-            'Convergence time',
-            'Communication interference'
-        ]
+def export_csv_nsga(records):
+    for record in records:
+        f = record['file']
 
-        writer = csv.DictWriter(exp_file, fieldnames=fnames)
-        writer.writeheader()
+        with open(f,mode='w') as exp_file:
+            fnames = [
+                'Energy consumption',
+                'Network lifetime',
+                'Convergence time',
+                'Communication interference'
+            ]
 
-        for key in result.keys():
-            res = result[key]
+            writer = csv.DictWriter(exp_file, fieldnames=fnames)
+            writer.writeheader()
 
             writer.writerow({
-                'Energy consumption': res['ec'],
-                'Network lifetime': res['nl'],
-                'Convergence time': res['ct'],
-                'Communication interference': res['ci']
+                'Energy consumption': record['ec'],
+                'Network lifetime': record['nl'],
+                'Convergence time': record['ct'],
+                'Communication interference': record['ci']
             })
 
 
@@ -232,7 +240,7 @@ def eval_sg(files, size):
 
 def eval_nsga():
     records = cal_nsga(medium)
-    export_csv_nsga("out/nsga.csv", summarize_nsga(records))
+    export_csv_nsga(records)
 
 # def eval_dg(filesize, size):
 #     ga_dataset = defaultdict(lambda: [])

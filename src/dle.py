@@ -2,34 +2,36 @@ from steinertree import SteinerTree
 from collections import defaultdict as dd
 from collections import Counter
 import random
+import config
 
+
+# double layer encoding library
 class DLE:
     def __init__(self, network):
         self.layer_1 = []
         self.layer_2 = []
         self.network = network
-    
+
+    # encode a steiner tree to 2 layer
     @classmethod
     def encode(cls, st):
         res = DLE(st.network)
         n = st.network.N
         
         # generate layer 2
-        stack = []
-        stack.append((None,st.root))
+        stack = [(None, st.root)]
 
         while stack:
             parent,node = stack.pop()
             if parent is not None:
                 res.layer_2.append(parent)
                 res.layer_2.append(node)
-            edges = zip([node]*len(st.child[node]),st.child[node])
+            edges = zip([node]*len(st.child[node]), st.child[node])
             stack.extend([(x,y) for (x,y) in edges])
-        
+
+        # length of layer 2 equals to 2*(n-1) with n is the total number of nodes
         while len(res.layer_2) != 2*(n-1):
             res.layer_2.append(random.choice(res.layer_2))
-        
-        assert(len(res.layer_2) == 2*(n-1))
 
         # generate layer 1
         for i in range(n):
@@ -40,7 +42,8 @@ class DLE:
                     res.layer_1.append(0)
         
         return res
-    
+
+    # repair layer 1 by set steiner nodes to 1 and others to 0
     def repair(self):
         self.layer_1 = []
 
@@ -68,7 +71,7 @@ class DLE:
                 root[y_root] = x_root
                 rank[x_root] += 1
 
-        res = SteinerTree(self.network)
+        tree = SteinerTree(self.network)
         
         fringes = []
         root = [None for _ in range(len(self.layer_2)//2+1)]
@@ -88,9 +91,9 @@ class DLE:
                     fringes.append((x,y))
                     union(root,rank,x_root,y_root)
 
-        res.build(fringes)
+        tree.build(fringes)
 
-        return res
+        return tree
 
     def is_compatible(self):
         layer = []
@@ -102,51 +105,59 @@ class DLE:
                 else:
                     layer.append(0)
         
-        return (self.layer_1 == layer)
+        return self.layer_1 == layer
 
     def fitness_evaluation(self):
         st = self.decode()
         
         return {
-            'ec' : self.network.energy_consumption(st),
-            'nl' : self.network.network_lifetime(st),
-            'ct' : self.network.convergence_time(st),
-            'ci' : self.network.communication_interference(st)
+            'ec': self.network.energy_consumption(st),
+            'nl': self.network.network_lifetime(st),
+            'ct': self.network.convergence_time(st),
+            'ci': self.network.communication_interference(st)
         }
     
     @classmethod
-    def ewd_evolution(cls,p1,p2):
+    def ewd_evolution(cls, p1, p2):
+        # get list of adjacent nodes for each node in tree
         def adj_map(st):
             m = dd(lambda: [])
             for node in st.get_all_nodes():
                 p = st.parent[node]
-                if p is not None: m[node].append(p)
+                if p is not None:
+                    m[node].append(p)
                 m[node].extend(st.child[node])
             return m
-        
-        def find_node(node,candidates,network):
-            return min(candidates, key=lambda next_node: network.distance(next_node,node))
 
-        def anx(p1,p2):
+        # select node with the smallest distance to the current node
+        def find_node(node, candidates, network):
+            return min(candidates, key=lambda next_node: network.distance(next_node, node))
+
+        # adjacent node crossover
+        def anx(p1, p2):
             network = p1.network
 
             st1 = p1.decode()
             st2 = p2.decode()
 
+            # build up 2 adjacent map
             p1_map = adj_map(st1)
             p2_map = adj_map(st2)
             
             layer = [None for _ in range(len(p1.layer_2))]
 
+            # first node is the root of tree 1
             node = st1.root
             layer[0] = node
 
-            for i in range(1,len(layer)):
+            for i in range(1, len(layer)):
+                # list of nodes are proximity with current node in BOTH trees
                 s = [x for x in p1_map[node] if x in set(p2_map[node])]
-                v = list(set().union(p1_map[node],p2_map[node]))
+                # list of nodes are proximity with current node in AT LEAST one tree
+                v = list(set().union(p1_map[node], p2_map[node]))
 
                 if len(s) > 0:
-                    next_node = find_node(node,s,network)
+                    next_node = find_node(node, s, network)
 
                     p1_map[node].remove(next_node)
                     p1_map[next_node].remove(node)
@@ -157,7 +168,7 @@ class DLE:
                     node = next_node
                 else:
                     if len(v) > 0:
-                        next_node = find_node(node,v,network)
+                        next_node = find_node(node, v, network)
 
                         if next_node in p1_map[node]:
                             p1_map[node].remove(next_node)
@@ -171,37 +182,51 @@ class DLE:
                         node = random.choice(st1.get_all_nodes())
 
                 layer[i] = node
-            
-            # make sure that all node in p1 will be in layer
-            for node in set(p1.layer_2):
-                if node not in set(layer):
-                    counter = Counter(layer)
-                    r = random.choice([x for x in counter if counter[x] > 1])
-                    layer[layer.index(r)] = node
+
+            if config.HARD_FIX:
+                # make sure that all nodes in p1 will be in layer
+                for node in set(p1.layer_2):
+                    if node not in set(layer):
+                        counter = Counter(layer)
+                        r = random.choice([x for x in counter if counter[x] > 1])
+                        layer[layer.index(r)] = node
 
             return layer
-                          
-        def rem(layer):
-            i1,i2 = random.sample(range(len(layer)),2)
-            layer[i1],layer[i2] = layer[i2],layer[i1]
 
-        offspring = anx(p1,p2)
+        # reciprocal exchange mutation
+        # exchange value of 2 nodes in layer
+        def rem(layer):
+            i1, i2 = random.sample(range(len(layer)), 2)
+            layer[i1], layer[i2] = layer[i2], layer[i1]
+
+        offspring = anx(p1, p2)
         rem(offspring)
 
         res = DLE(p1.network)
         res.layer_1 = list(p1.layer_1)
         res.layer_2 = offspring
 
-        if res.is_compatible() and res.decode().is_fisible():
-            return res
-        else:
-            return p1
+        return res
     
     @classmethod
-    def tree_evolution(cls,p1,p2):
-        def poo(p1,p2):
-            i1,i2 = sorted(random.sample(range(len(p1.layer_1)),2))
-            offspring = p1.layer_1[:i1] + p2.layer_1[i1:i2] + p1.layer_1[i2:]
+    def tree_evolution(cls, p1, p2):
+
+        # partial OR operator
+        # i1 = 2, i2 = 5
+        # p1: 1 0 | 0 1 0 | 0 1
+        # p2: 0 1 | 1 1 0 | 1 1
+        # partial: (0 1 0) | (1 1 0)
+        # offspring: 1 0 1 1 0 0 1
+        def poo(_p1, _p2):
+            if config.DEBUG:
+                assert len(_p1.layer_1) == len(_p2.layer_1)
+
+            i1, i2 = sorted(random.sample(range(len(_p1.layer_1)), 2))
+            partial = []
+            for i in range(i1, i2):
+                partial.append(_p1.layer_1[i] | _p2.layer_1[i])
+
+            offspring = _p1.layer_1[:i1] + partial + _p1.layer_1[i2:]
             return offspring
         
         layer_1 = poo(p1,p2)
@@ -209,16 +234,20 @@ class DLE:
         st1 = p1.decode()
         st2 = p2.decode()
 
+        # first priority: edges appear in both trees
         intersections = [(x,y) for (x,y) in st1.get_all_edges() if (x,y) in set(st2.get_all_edges())]
+
+        # second priority: edges contain 2 steiner nodes in layer 1
         unions = list(set().union(st1.get_all_edges(),st2.get_all_edges()))
         residuals = [edge for edge in unions if edge not in intersections]
         steiner_nodes = [node for i, node in enumerate(p1.network.relays) if layer_1[i] == 1]
-        edges = [[src,dst] for [src,dst] in residuals if src in steiner_nodes and dst in steiner_nodes]
+        steiner_edges = [(n1,n2) for (n1,n2) in residuals if n1 in steiner_nodes and n2 in steiner_nodes]
 
-        candidates = [edge for edge in residuals if edge not in edges]
-        candidates.sort(key=lambda x:p1.network.distance(x[0],x[1]))
+        # third priority: remaining edges in both trees
+        remains = [edge for edge in residuals if edge not in steiner_edges]
+        remains.sort(key=lambda x: p1.network.distance(x[0],x[1]))
 
         st = SteinerTree(p1.network)
-        st.kruskal(intersections + edges + candidates)
+        st.kruskal(intersections + steiner_edges + remains)
 
         return DLE.encode(st)
