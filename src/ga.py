@@ -1,5 +1,4 @@
 import random
-from functools import reduce
 import time
 from helper import Helper
 import config

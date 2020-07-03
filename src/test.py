@@ -8,11 +8,11 @@ from nsga import Swarm as snsga
 fp = os.path.join(os.path.dirname(__file__), '../WusnNewModel/data/small_data/ga-dem1_r30_1.in')
 nw = Network(fp)
 
-s = sga(nw, swarm_size=10, generation=10)
+s = sga(nw, swarm_size=40, generation=50)
 r = s.eval()
 
-s = spso(nw, swarm_size=10, generation=10)
+s = spso(nw, swarm_size=40, generation=50)
 r = s.eval()
 
-s = snsga(nw, swarm_size=20, generation=10)
+s = snsga(nw, swarm_size=40, generation=50)
 r = s.eval()

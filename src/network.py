@@ -52,10 +52,10 @@ class Network:
     def distance(self,n1,n2):
         x1,y1,z1 = self.coord[n1]
         x2,y2,z2 = self.coord[n2]
-        return ((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)**(.5)
+        return ((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2) ** .5
     
-    def link_interference(self,n1,n2):
-        d = self.distance(n1,n2)
+    def link_interference(self, n1, n2):
+        d = self.distance(n1, n2)
 
         return len([node for node in range(self.N) if (self.distance(node,n1) <= d or self.distance(node,n2) <= d)])
     
@@ -87,13 +87,3 @@ class Network:
                     edges.append((i,j))
 
         return edges
-
-    def adj_dict(self):
-        ret = defaultdict(lambda: [])
-
-        for i in range(self.N):
-            for j in range(self.N):
-                if i != j and self.distance(i,j) <= self.trans_range:
-                    ret[i].append(j)
-
-        return ret

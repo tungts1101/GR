@@ -8,7 +8,7 @@ from multiprocessing import Process,Manager
 import csv
 import config
 
-fp = os.path.join(os.path.dirname(__file__),'../WusnNewModel/data')
+fp = os.path.join(os.path.dirname(__file__), '../WusnNewModel/data')
 
 
 def get_file(d):
@@ -23,9 +23,9 @@ small = get_file(fp+'/small_data/')
 medium = get_file(fp+'/medium_data/')
 
 
-def run_with_same_generation(f,swarm,res):
+def run_with_same_generation(f, swarm, res):
     nw = Network(f)
-    s = swarm(nw,generation=150,stall_gen=150)
+    s = swarm(nw, swarm_size=10, generation=10, stall_gen=10)
     r = s.eval()
 
     res.append(
@@ -53,15 +53,15 @@ def run_with_diff_generation(f,swarm,res):
     )
 
 
-def run_nsga(f,res):
+def run_nsga(f, res):
     nw = Network(f)
-    s = snsga(nw,generation=150)
+    s = snsga(nw, swarm_size=10, generation=10)
     r = s.eval()
 
     res.append(
         {
             'file': os.path.split(os.path.abspath(f))[1],
-            'running time': r['running time'],
+            'running time': r['running_time'],
             'front': r['front']
         }
     )
@@ -142,30 +142,8 @@ def summarize(records):
     return ret
 
 
-def summarize_nsga(records):
-    ret = []
-
-    for record in records:
-        obj = record['front'].objective
-        res = dict()
-        res['ec'] = obj[0]
-        res['nl'] = obj[1]
-        res['ct'] = obj[2]
-        res['ci'] = obj[3]
-
-        ret.append([
-            record['file'],
-            res['ec'],
-            res['nl'],
-            res['ct'],
-            res['ci']
-        ])
-
-    return ret
-
-
-def export_csv(csvf,result):
-    with open(csvf,mode='w') as exp_file:
+def export_csv(csvf, result):
+    with open(csvf, mode='w+') as exp_file:
         fnames = ['File','Avg Err','Best Err','Worst Err','Avg Rt','Best Rt','Worst Rt','Avg Gen','Best Gen','Worst Gen']
 
         writer = csv.DictWriter(exp_file, fieldnames=fnames)
@@ -192,7 +170,11 @@ def export_csv_nsga(records):
     for record in records:
         f = record['file']
 
-        with open(f,mode='w') as exp_file:
+        f = os.path.join(os.path.dirname(__file__), '../out/nsga/' + f[:-3] + '.csv')
+
+        front = record['front']
+
+        with open(f, mode='w+') as exp_file:
             fnames = [
                 'Energy consumption',
                 'Network lifetime',
@@ -203,12 +185,13 @@ def export_csv_nsga(records):
             writer = csv.DictWriter(exp_file, fieldnames=fnames)
             writer.writeheader()
 
-            writer.writerow({
-                'Energy consumption': record['ec'],
-                'Network lifetime': record['nl'],
-                'Convergence time': record['ct'],
-                'Communication interference': record['ci']
-            })
+            for objs in front:
+                writer.writerow({
+                    'Energy consumption': objs[0],
+                    'Network lifetime': objs[1],
+                    'Convergence time': objs[2],
+                    'Communication interference': objs[3]
+                })
 
 
 def eval_sg(files, size):
@@ -231,15 +214,15 @@ def eval_sg(files, size):
             pso_dataset[record['file']].append(record)
     
     if size == "small":
-        export_csv("out/SG_Small_GA.csv", summarize(ga_dataset))
-        export_csv("out/SG_Small_PSO.csv", summarize(pso_dataset))
+        export_csv(os.path.join(os.path.dirname(__file__), '../out/small_ga.csv'), summarize(ga_dataset))
+        export_csv(os.path.join(os.path.dirname(__file__), '../out/small_pso.csv'), summarize(pso_dataset))
     else:
-        export_csv("out/ga.csv", summarize(ga_dataset))
-        export_csv("out/pso.csv", summarize(pso_dataset))
+        export_csv(os.path.join(os.path.dirname(__file__), '../out/medium_ga.csv'), summarize(ga_dataset))
+        export_csv(os.path.join(os.path.dirname(__file__), '../out/medium_pso.csv'), summarize(pso_dataset))
 
 
 def eval_nsga():
-    records = cal_nsga(medium)
+    records = cal_nsga([medium[0]])
     export_csv_nsga(records)
 
 # def eval_dg(filesize, size):
@@ -273,5 +256,5 @@ if __name__ == '__main__':
     # eval_dg(small, "small")
     # eval_dg(medium,"medium")
     # eval_sg(small, "small")
-    eval_sg(medium, "medium")
-    eval_nsga()
+    eval_sg([medium[0]], "medium")
+    # eval_nsga()

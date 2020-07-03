@@ -214,4 +214,7 @@ class Swarm:
             print("--------------------------------------------------------------------------------")
             print("")
 
-        return {"running_time": running_time, "front": fronts[0]}
+        return {
+            "running_time": running_time,
+            "front": [self.calculate_objective(p) for p in fronts[0]]
+        }
